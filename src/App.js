@@ -3,7 +3,7 @@ import './App.css';
 
 function Square(props) {
   return (
-    <button className="square" onClick={() => props.onClick()}>
+    <button className={props.className} onClick={() => props.onClick()}>
       {props.value}
     </button>
   );
@@ -11,7 +11,13 @@ function Square(props) {
 
 class Board extends Component {
   renderSquare(i) {
-    return <Square value={this.props.squares[i]} onClick={() => this.props.onClick(i)}/>;
+    return <Square 
+      value={this.props.squares[i]} 
+      onClick={() => this.props.onClick(i)}
+      className={this.props.winningSquares && this.props.winningSquares.indexOf(i) !== -1 // Looks into jQuery & React for contains? Also, null conditional would be great here.
+        ? 'winner square' 
+        : 'square'} 
+    />;
   }
 
   render() {
@@ -83,7 +89,7 @@ class Game extends Component {
     let status;
 
     if(winner) { 
-      status = 'Winner: ' + winner;
+      status = 'Winner: ' + winner.winner;
     } else {
       status = 'Next player: ' + (this.state.xIsNext ? 'X': 'O');
     }
@@ -92,8 +98,11 @@ class Game extends Component {
       const desc = i ? 
         'Move #' + i :
         'Game start';
+
+      const cssClass = i === this.state.moveNumber ? 'current' : null;
+
       return (
-        <li key={i}>
+        <li key={i} className={cssClass}>
           <a href='#' onClick={() => this.jumpTo(i)}>{desc}</a>
         </li>
       );
@@ -104,7 +113,8 @@ class Game extends Component {
         <div className="game-board">
           <Board
             squares={current.squares}
-            onClick={(i) => this.handleClick(i)}/>
+            onClick={(i) => this.handleClick(i)}
+            winningSquares={winner ? winner.squares : null}/>
         </div>
         <div className="game-info">
           <div>{status}</div>
@@ -129,7 +139,7 @@ function calculateWinner(squares) {
   for (let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i];
     if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return squares[a];
+      return { winner: squares[a], squares: lines[i] };
     }
   }
   return null;
